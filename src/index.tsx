@@ -9,7 +9,19 @@ import reportWebVitals from "./reportWebVitals";
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
-      <MantineProvider theme={{ colorScheme: "dark" }} withGlobalStyles>
+      <MantineProvider
+        theme={{
+          colorScheme: "dark",
+          breakpoints: {
+            xs: 500,
+            sm: 800,
+            md: 1000,
+            lg: 1200,
+            xl: 1400,
+          },
+        }}
+        withGlobalStyles
+      >
         <App />
       </MantineProvider>
     </BrowserRouter>

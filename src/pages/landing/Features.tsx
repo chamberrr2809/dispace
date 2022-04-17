@@ -95,7 +95,7 @@ export default function Features() {
             variant="gradient"
             gradient={{ deg: 133, from: "blue", to: "cyan" }}
             size="lg"
-            onClick={() => navigate("/auth")}
+            onClick={() => navigate("/login")}
             radius="md"
             mt="xl"
           >

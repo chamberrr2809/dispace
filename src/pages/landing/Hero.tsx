@@ -115,14 +115,21 @@ export default function Hero() {
             </List>
 
             <Group mt={30}>
-              <Button radius="xl" size="md"             onClick={() => navigate("/auth")}
- className={classes.control}>
+              <Button
+                radius="xl"
+                size="md"
+                onClick={() => navigate("/login")}
+                className={classes.control}
+              >
                 Get started
               </Button>
               <Button
                 variant="default"
                 radius="xl"
                 size="md"
+                onClick={() =>
+                  window.open("https://github.com/chamberrr2809/dispace")
+                }
                 className={classes.control}
               >
                 Source code
