@@ -14,7 +14,7 @@ import {
   Stack,
 } from "@mantine/core";
 import { Helmet } from "react-helmet";
-import { BrandGoogle, BrandDiscord, BrandSpotify } from "tabler-icons-react";
+import { BrandGoogle, BrandTwitter, BrandGithub } from "tabler-icons-react";
 import { faker } from "@faker-js/faker";
 import { useNavigate } from "react-router-dom";
 import auth from "../../firebase";
@@ -42,20 +42,6 @@ export default function Register() {
   return (
     <>
       <Helmet>
-        <meta charSet="utf-8" />
-        <link
-          rel="icon"
-          href="https://cdn.discordapp.com/attachments/937506444331335760/964505910187814942/logo-dispace-removebg-preview.png"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Discord in a Space" />
-        <meta property="og:title" content="Dispace" />
-        <meta property="og:url" content="http://localhost" />
-        <meta
-          property="og:image"
-          content="https://cdn.discordapp.com/attachments/937506444331335760/964505910187814942/logo-dispace-removebg-preview.png"
-        />
-        <meta property="og:description" content="Discord in a Space" />
         <title>Dispace | Buat akun baru</title>
       </Helmet>
       <Container size={420} my={50}>
@@ -97,22 +83,22 @@ export default function Register() {
             <Button
               variant="default"
               leftIcon={
-                <BrandDiscord size={24} strokeWidth={2} color={"white"} />
+                <BrandTwitter size={24} strokeWidth={2} color={"white"} />
               }
               radius="xl"
               size="md"
             >
-              Lanjutkan dengan Discord
+              Lanjutkan dengan Twitter
             </Button>
             <Button
               variant="default"
               leftIcon={
-                <BrandSpotify size={24} strokeWidth={2} color={"white"} />
+                <BrandGithub size={24} strokeWidth={2} color={"white"} />
               }
               radius="xl"
               size="md"
             >
-              Lanjutkan dengan Spotify
+              Lanjutkan dengan Github
             </Button>
           </Stack>
           <Divider

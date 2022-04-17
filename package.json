@@ -29,6 +29,7 @@
     "react-dom": "^18.0.0",
     "react-firebase-hooks": "^5.0.3",
     "react-helmet": "^6.1.0",
+    "react-meta-tags": "^1.0.1",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.0",
     "tabler-icons-react": "^1.44.0",
