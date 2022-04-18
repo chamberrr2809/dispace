@@ -14,4 +14,5 @@ const config = {
 
 const app = initializeApp(config)
 const auth = getAuth(app)
+auth.languageCode = 'id'
 export default auth

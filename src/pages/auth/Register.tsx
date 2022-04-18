@@ -16,12 +16,53 @@ import {
 import { Helmet } from "react-helmet";
 import { BrandGoogle, BrandTwitter, BrandGithub } from "tabler-icons-react";
 import { faker } from "@faker-js/faker";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import {
+  GoogleAuthProvider,
+  TwitterAuthProvider,
+  signInWithPopup,
+  GithubAuthProvider,
+} from "firebase/auth";
 import auth from "../../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 export default function Register() {
   const navigate = useNavigate();
+  const googleLogin = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        navigate("/app", {
+          replace: true,
+        });
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
+
+  const twitterLogin = () => {
+    const provider = new TwitterAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        navigate("/app", { replace: true });
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
+
+  const githubLogin = () => {
+    const provider = new GithubAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        navigate("/app", { replace: true });
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
+
   const [password, setPassword] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [user, loading, error] = useAuthState(auth);
@@ -64,7 +105,7 @@ export default function Register() {
               navigate("/login");
             }}
           >
-            masuk ke akunmu.
+            Masuk ke akunmu.
           </Anchor>
         </Text>
 
@@ -74,6 +115,7 @@ export default function Register() {
               variant="default"
               radius="xl"
               size="md"
+              onClick={googleLogin}
               leftIcon={
                 <BrandGoogle size={24} strokeWidth={2} color={"white"} />
               }
@@ -82,6 +124,7 @@ export default function Register() {
             </Button>
             <Button
               variant="default"
+              onClick={twitterLogin}
               leftIcon={
                 <BrandTwitter size={24} strokeWidth={2} color={"white"} />
               }
@@ -92,6 +135,7 @@ export default function Register() {
             </Button>
             <Button
               variant="default"
+              onClick={githubLogin}
               leftIcon={
                 <BrandGithub size={24} strokeWidth={2} color={"white"} />
               }
