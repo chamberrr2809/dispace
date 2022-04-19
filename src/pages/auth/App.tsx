@@ -13,32 +13,112 @@ import {
   Button,
   Stack,
 } from "@mantine/core";
+import { showNotification } from "@mantine/notifications";
+import validator from "validator";
 import { Helmet } from "react-helmet";
-import { BrandGoogle, BrandDiscord, BrandSpotify } from "tabler-icons-react";
+import { BrandGoogle, BrandTwitter, BrandGithub } from "tabler-icons-react";
 import { faker } from "@faker-js/faker";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import {
+  GoogleAuthProvider,
+  TwitterAuthProvider,
+  signInWithPopup,
+  GithubAuthProvider,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import auth from "../../firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 
-export default function Auth() {
+export default function Register() {
+  const [isLoading, setIsLoading] = React.useState(false);
   const navigate = useNavigate();
+  const googleLogin = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        navigate("/app", {
+          replace: true,
+        });
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
+
+  const twitterLogin = () => {
+    const provider = new TwitterAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        navigate("/app", { replace: true });
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
+
+  const githubLogin = () => {
+    const provider = new GithubAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        navigate("/app", { replace: true });
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
+
   const [password, setPassword] = React.useState("");
   const [email, setEmail] = React.useState("");
+  const [user, loading, error] = useAuthState(auth);
+
+  const emailHandler = () => {
+    if (validator.isEmail(email) && email !== "") {
+      if (password !== "") {
+        setIsLoading(true);
+        signInWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            navigate("/app", { replace: true });
+            setIsLoading(false);
+          })
+          .catch((error) => {
+            setIsLoading(false);
+            if (error.code === "auth/wrong-password") {
+              showNotification({
+                title: "Password tidak valid",
+                message:
+                  "Password yang kamu masukkan salah. Coba periksa lagi dan coba kembali!",
+              });
+            }
+          });
+      }
+    } else {
+      showNotification({
+        title: "Email tidak valid",
+        message:
+          "Hey, sepertinya kamu salah memasukkan emailmu, atau typo? Tenang saja, kamu hanya perlu menggantinya",
+        color: "red",
+        autoClose: 8000,
+      });
+    }
+  };
+
+  if (loading) {
+    return <div>loading</div>;
+  }
+
+  if (error) {
+    return <h3>error: {error}</h3>;
+  }
+
+  if (user) {
+    navigate("/app", {
+      replace: true,
+    });
+    return <h3>Sepertinya kamu sudah terdaftar. Tunggu sebentar</h3>;
+  }
   return (
     <>
       <Helmet>
-        <meta charSet="utf-8" />
-        <link
-          rel="icon"
-          href="https://cdn.discordapp.com/attachments/937506444331335760/964505910187814942/logo-dispace-removebg-preview.png"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Discord in a Space" />
-        <meta property="og:title" content="Dispace" />
-        <meta property="og:url" content="http://localhost" />
-        <meta
-          property="og:image"
-          content="https://cdn.discordapp.com/attachments/937506444331335760/964505910187814942/logo-dispace-removebg-preview.png"
-        />
-        <meta property="og:description" content="Discord in a Space" />
         <title>Dispace | Masuk ke akunmu</title>
       </Helmet>
       <Container size={420} my={50}>
@@ -49,10 +129,10 @@ export default function Auth() {
             fontWeight: 900,
           })}
         >
-          Masuk ke Dispace
+          Masuk ke akun Dispace
         </Title>
         <Text color="dimmed" size="sm" align="center" mt={5}>
-          Tidak punya akun?{" "}
+          Belum punya akun?{" "}
           <Anchor<"a">
             href="#"
             size="sm"
@@ -61,7 +141,7 @@ export default function Auth() {
               navigate("/register");
             }}
           >
-            Buat akun. Gratis!
+            Daftar sekarang. Gratis!
           </Anchor>
         </Text>
 
@@ -71,6 +151,7 @@ export default function Auth() {
               variant="default"
               radius="xl"
               size="md"
+              onClick={googleLogin}
               leftIcon={
                 <BrandGoogle size={24} strokeWidth={2} color={"white"} />
               }
@@ -79,31 +160,37 @@ export default function Auth() {
             </Button>
             <Button
               variant="default"
+              onClick={twitterLogin}
               leftIcon={
-                <BrandDiscord size={24} strokeWidth={2} color={"white"} />
+                <BrandTwitter size={24} strokeWidth={2} color={"white"} />
               }
               radius="xl"
               size="md"
             >
-              Lanjutkan dengan Discord
+              Lanjutkan dengan Twitter
             </Button>
             <Button
               variant="default"
+              onClick={githubLogin}
               leftIcon={
-                <BrandSpotify size={24} strokeWidth={2} color={"white"} />
+                <BrandGithub size={24} strokeWidth={2} color={"white"} />
               }
               radius="xl"
               size="md"
             >
-              Lanjutkan dengan Spotify
+              Lanjutkan dengan Github
             </Button>
           </Stack>
-          <Text my="md" align="center" color="gray">
-            atau
-          </Text>
+          <Divider
+            label="atau daftar dengan email"
+            labelPosition="center"
+            my="lg"
+          />
 
           <TextInput
             label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder={faker.internet.email(
               faker.name.firstName(),
               faker.name.lastName(),
@@ -112,13 +199,20 @@ export default function Auth() {
             required
           />
           <PasswordInput
+            value={password}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                emailHandler();
+              }
+            }}
+            onChange={(e) => setPassword(e.target.value)}
             label="Password"
             placeholder="Your password"
             required
             mt="md"
           />
           <Group position="apart" mt="md">
-            <Checkbox label="Ingat saya" />
+            <Checkbox label="Remember me" />
             <Anchor<"a">
               onClick={(event) => {
                 event.preventDefault();
@@ -130,7 +224,7 @@ export default function Auth() {
               Lupa password?
             </Anchor>
           </Group>
-          <Button fullWidth mt="xl">
+          <Button loading={isLoading} fullWidth mt="xl" onClick={emailHandler}>
             Masuk
           </Button>
         </Paper>

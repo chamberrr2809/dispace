@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import { MantineProvider } from "@mantine/core";
+import { NotificationsProvider } from "@mantine/notifications";
 import { BrowserRouter } from "react-router-dom";
 import reportWebVitals from "./reportWebVitals";
 
@@ -22,7 +23,9 @@ ReactDOM.render(
         }}
         withGlobalStyles
       >
-        <App />
+        <NotificationsProvider>
+          <App />
+        </NotificationsProvider>
       </MantineProvider>
     </BrowserRouter>
   </React.StrictMode>,
