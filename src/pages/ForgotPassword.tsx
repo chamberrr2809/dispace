@@ -92,6 +92,11 @@ export default function ForgotPassword() {
           placeholder="me@example.com"
           required
           value={email}
+          onKeyUp={(e) => {
+            if (e.key === "Enter") {
+              sendEmail();
+            }
+          }}
           onChange={(e) => setEmail(e.target.value)}
         />
         <Group position="apart" mt="lg" className={classes.controls}>
