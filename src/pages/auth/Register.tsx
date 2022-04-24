@@ -24,7 +24,7 @@ import { showNotification } from "@mantine/notifications";
 import { useInputState } from "@mantine/hooks";
 import { BrandGoogle, BrandTwitter, BrandGithub } from "tabler-icons-react";
 import { faker } from "@faker-js/faker";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   GoogleAuthProvider,
   TwitterAuthProvider,
@@ -91,7 +91,7 @@ export default function Register() {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider)
       .then((result) => {
-        navigate("/app", {
+        navigate("/onboarding", {
           replace: true,
         });
       })
@@ -104,7 +104,7 @@ export default function Register() {
     const provider = new TwitterAuthProvider();
     signInWithPopup(auth, provider)
       .then((result) => {
-        navigate("/app", { replace: true });
+        navigate("/onboarding", { replace: true });
       })
       .catch((error) => {
         alert(error.message);
@@ -115,7 +115,7 @@ export default function Register() {
     const provider = new GithubAuthProvider();
     signInWithPopup(auth, provider)
       .then((result) => {
-        navigate("/app", { replace: true });
+        navigate("/onboarding", { replace: true });
       })
       .catch((error) => {
         alert(error.message);
@@ -130,11 +130,21 @@ export default function Register() {
         setIsLoading(true);
         createUserWithEmailAndPassword(auth, email, value)
           .then((userCredential) => {
-            navigate("/app", { replace: true });
+            navigate("/onboarding", { replace: true });
             setIsLoading(false);
           })
           .catch((error) => {
-            alert(error.message);
+            alert(error.code);
+            setIsLoading(false);
+            if (error.code === "auth/email-already-in-use") {
+              showNotification({
+                title: "Email sudah digunakan",
+                message:
+                  "Email yang kamu masukkan sudah digunakan untuk membuat akun. Coba dengan email lain",
+                color: "red",
+                autoClose: 8000,
+              });
+            }
           });
       }
     } else {

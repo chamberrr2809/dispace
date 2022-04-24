@@ -5,6 +5,7 @@ import React from "react";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/home/App";
+import Onboarding from "./pages/auth/Onboarding";
 
 const App: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const App: React.FC = () => {
       <Route path="/login" element={<Auth />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/app" element={<Home />} />
     </Routes>
   );
