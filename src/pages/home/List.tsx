@@ -4,11 +4,15 @@ import auth from "../../firebase";
 import { EmailBanner } from "../../components/ConfirmationMail";
 import { useNavigate } from "react-router-dom";
 import image from "../../assets/logo.svg";
+import { useDisclosure } from "@mantine/hooks";
 import {
   createStyles,
   Navbar,
   TextInput,
   Code,
+  Menu,
+  Avatar,
+  useMantineTheme,
   UnstyledButton,
   Badge,
   Modal,
@@ -28,11 +32,18 @@ import { useModals } from "@mantine/modals";
 import {
   Bulb,
   User,
-  Checkbox,
   Search,
   Plus,
-  Selector,
+  Logout,
+  Heart,
+  Star,
   Message,
+  Settings,
+  PlayerPause,
+  Trash,
+  SwitchHorizontal,
+  ChevronRight,
+  Selector,
 } from "tabler-icons-react";
 import { UserButton } from "../../components/UserButton";
 
@@ -201,8 +212,10 @@ const collections = [
 const List: React.FC = () => {
   const [user, loading, error] = useAuthState(auth);
   const navigate = useNavigate();
-  const [opened, setOpened] = React.useState(false);
+  const [opened, handlers] = useDisclosure(false);
+  const [openedd, setOpenedd] = React.useState(false);
   const { classes } = useStyles();
+  const theme = useMantineTheme();
 
   const redirectHandler = (link: string) => {
     if (link === "activity") {
@@ -291,7 +304,7 @@ const List: React.FC = () => {
                   </Text>
                   <Tooltip label="Buat/Gabung Space" withArrow position="right">
                     <ActionIcon
-                      onClick={() => setOpened(true)}
+                      onClick={() => setOpenedd(true)}
                       variant="default"
                       size={18}
                     >
@@ -305,8 +318,8 @@ const List: React.FC = () => {
           }
         >
           <Modal
-            opened={opened}
-            onClose={() => setOpened(false)}
+            opened={openedd}
+            onClose={() => setOpenedd(false)}
             title="Buat/gabung Space"
           >
             <Group position="center">
