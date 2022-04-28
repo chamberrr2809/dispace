@@ -22,6 +22,7 @@ import {
   Trash,
   SwitchHorizontal,
 } from "tabler-icons-react";
+import { useNavigate } from "react-router-dom";
 
 const useStyles = createStyles((theme) => ({
   user: {
@@ -56,6 +57,8 @@ export function UserButton({
   const { classes } = useStyles();
   const theme = useMantineTheme();
 
+  const navigate = useNavigate();
+
   return (
     <>
       <Group position="center">
@@ -66,11 +69,11 @@ export function UserButton({
                 <Avatar src={image} radius="xl" />
 
                 <div style={{ flex: 1 }}>
-                  <Text size="md" weight={500}>
+                  <Text size="sm" weight={500}>
                     {name}
                   </Text>
 
-                  <Text color="dimmed" size="md">
+                  <Text color="dimmed" size="sm">
                     {email}
                   </Text>
                 </div>
@@ -84,7 +87,10 @@ export function UserButton({
           placement="center"
           transition="pop"
         >
-          <Menu.Item rightSection={<ChevronRight size={14} />}>
+          <Menu.Item
+            onClick={() => navigate("/app/settings/profile")}
+            rightSection={<ChevronRight size={14} />}
+          >
             <Group>
               <Avatar radius="xl" src={image} />
 
@@ -99,18 +105,13 @@ export function UserButton({
 
           <Divider />
 
-          <Menu.Item icon={<Heart size={14} color={theme.colors.red[6]} />}>
-            Liked posts
-          </Menu.Item>
-          <Menu.Item icon={<Star size={14} color={theme.colors.yellow[6]} />}>
-            Saved posts
-          </Menu.Item>
-          <Menu.Item icon={<Message size={14} color={theme.colors.blue[6]} />}>
-            Your comments
-          </Menu.Item>
-
           <Menu.Label>Settings</Menu.Label>
-          <Menu.Item icon={<Settings size={14} />}>Account settings</Menu.Item>
+          <Menu.Item
+            onClick={() => navigate("/app/settings/account")}
+            icon={<Settings size={14} />}
+          >
+            Account settings
+          </Menu.Item>
           <Menu.Item icon={<SwitchHorizontal size={14} />}>
             Change account
           </Menu.Item>
@@ -118,13 +119,7 @@ export function UserButton({
 
           <Divider />
 
-          <Menu.Label>Danger zone</Menu.Label>
-          <Menu.Item icon={<PlayerPause size={14} />}>
-            Pause subscription
-          </Menu.Item>
-          <Menu.Item color="red" icon={<Trash size={14} />}>
-            Delete account
-          </Menu.Item>
+          <Menu.Label>Dispace V1.0.0</Menu.Label>
         </Menu>
       </Group>
     </>

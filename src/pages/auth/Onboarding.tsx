@@ -139,7 +139,7 @@ export default function Onboarding() {
   if (user) {
     const finishProfile = () => {
       setLoad(true);
-      if (username !== "" && nama !== "" && bio !== "") {
+      if (username !== "" && bio !== "") {
         updateProfile(user, {
           displayName: username,
           photoURL: imageUrl,
@@ -147,7 +147,7 @@ export default function Onboarding() {
           .then(async () => {
             await setDoc(doc(db, "users", user.uid), {
               userId: user.uid,
-              realName: nama,
+              realName: nama ? nama : username,
               bio: bio,
             }).then(() => {
               setLoad(false);

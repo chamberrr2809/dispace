@@ -1,19 +1,31 @@
 import React from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import auth from "../../firebase";
+import { doc, setDoc } from "firebase/firestore";
+import { storage, db } from "../../firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { showNotification } from "@mantine/notifications";
+import { Upload, Photo, X, Icon as TablerIcon } from "tabler-icons-react";
+import { Dropzone, DropzoneStatus, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { EmailBanner } from "../../components/ConfirmationMail";
 import { useNavigate } from "react-router-dom";
+import randomstring from "randomstring";
+import moment from "moment";
 import {
   createStyles,
   Navbar,
   TextInput,
   Code,
   UnstyledButton,
+  MantineTheme,
+  useMantineTheme,
   Badge,
   Modal,
   Button,
   Text,
+  Progress,
   Group,
+  Checkbox as Checkbok,
   ActionIcon,
   Tooltip,
   Image,
@@ -31,6 +43,31 @@ import {
   Message,
 } from "tabler-icons-react";
 import { UserButton } from "../../components/UserButton";
+
+function getIconColor(status: DropzoneStatus, theme: MantineTheme) {
+  return status.accepted
+    ? theme.colors[theme.primaryColor][theme.colorScheme === "dark" ? 4 : 6]
+    : status.rejected
+    ? theme.colors.red[theme.colorScheme === "dark" ? 4 : 6]
+    : theme.colorScheme === "dark"
+    ? theme.colors.dark[0]
+    : theme.colors.gray[7];
+}
+
+function ImageUploadIcon({
+  status,
+  ...props
+}: React.ComponentProps<TablerIcon> & { status: DropzoneStatus }) {
+  if (status.accepted) {
+    return <Upload {...props} />;
+  }
+
+  if (status.rejected) {
+    return <X {...props} />;
+  }
+
+  return <Photo {...props} />;
+}
 
 const useStyles = createStyles((theme) => ({
   navbar: {
@@ -194,7 +231,53 @@ const collections = [
 const DirectMessages: React.FC = () => {
   const [user, loading, error] = useAuthState(auth);
   const navigate = useNavigate();
+  const childFunc = React.useRef(null);
+  const [id, setId] = React.useState(
+    randomstring.generate({
+      length: 25,
+      charset: "numeric",
+    })
+  );
+  const theme = useMantineTheme();
+  const [name, setName] = React.useState("");
+  const [imageUrl, setImageUrl] = React.useState("");
   const [opened, setOpened] = React.useState(false);
+  const [load, setLoad] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const dropzoneChildren = (status: DropzoneStatus, theme: MantineTheme) => (
+    <>
+      <Group
+        position="center"
+        spacing="xl"
+        style={{ minHeight: 220, pointerEvents: "none" }}
+      >
+        <ImageUploadIcon
+          status={status}
+          style={{ color: getIconColor(status, theme) }}
+          size={80}
+        />
+
+        <div>
+          <Text size="xl" inline>
+            {isLoading
+              ? "Mengupload Gambar... Mohon tunggu"
+              : "Tarik gambar ke sini atau tekan untuk memilih gambar"}
+          </Text>
+          <Text size="sm" color="dimmed" inline mt={7}>
+            File tidak dapat diubah setelah dipilih. Jenis file yang didukung
+            adalah JPEG, SVG, PNG, WEBP, dan GIF maksimal 5mb
+          </Text>
+        </div>
+      </Group>
+      <Progress
+        animate={isLoading ? false : true}
+        value={isUploading ? progress : 100}
+        striped={isLoading ? false : true}
+      />
+    </>
+  );
   const { classes } = useStyles();
 
   const redirectHandler = (link: string) => {
@@ -207,6 +290,21 @@ const DirectMessages: React.FC = () => {
     if (link === "friend") {
       navigate("/app/friends/@me");
     }
+  };
+
+  const buatServer = async (username: string | null) => {
+    setLoad(true);
+    await setDoc(doc(db, "spaces", id), {
+      serverId: id,
+      creationId: randomstring.generate(35),
+      dateCreated: moment().format("dddd, MMMM Do YYYY"),
+      timeCreated: moment().format("h:mm:ss a"),
+      name: name,
+      imageURL: imageUrl,
+      createdBy: username,
+    }).then(() => {
+      navigate(`/app/server/${id}`);
+    });
   };
 
   const mainLinks = links.map((link) => (
@@ -256,6 +354,7 @@ const DirectMessages: React.FC = () => {
         >
           <Group position="center">
             <Image
+              src={!imageUrl ? "" : imageUrl}
               placeholder={
                 <>
                   <Stack spacing="xs">
@@ -268,10 +367,113 @@ const DirectMessages: React.FC = () => {
               width={128}
               height={128}
             />
-            <Button>Ubah Foto</Button>
+            <Dropzone
+              mt="md"
+              onDrop={(files) => {
+                console.log("accepted files", files);
+                const metadata = {
+                  contentType: files[0].type,
+                };
+                const storageRef = ref(
+                  storage,
+                  "profile_picture/" + `${Date.now()}-${files[0].name}`
+                );
+                const uploadTask = uploadBytesResumable(
+                  storageRef,
+                  files[0],
+                  metadata
+                );
+                setIsUploading(true);
+                showNotification({
+                  title: `Mengupload ${files[0].name}`,
+                  message:
+                    "Foto Profilmu sedang diupload ke server Dispace. Mohon tunggu...",
+                  loading: isLoading,
+                  disallowClose: isLoading,
+                });
+                uploadTask.on(
+                  "state_changed",
+                  (snapshot) => {
+                    setIsLoading(true);
+                    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                    const progress =
+                      (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setProgress(progress);
+                  },
+                  (error) => {
+                    // A full list of error codes is available at
+                    // https://firebase.google.com/docs/storage/web/handle-errors
+                    switch (error.code) {
+                      case "storage/unauthorized":
+                        // User doesn't have permission to access the object
+                        break;
+                      case "storage/canceled":
+                        // User canceled the upload
+                        break;
+
+                      // ...
+
+                      case "storage/unknown":
+                        // Unknown error occurred, inspect error.serverResponse
+                        break;
+                    }
+                  },
+                  () => {
+                    setIsLoading(false);
+                    showNotification({
+                      title: "File Diupload",
+                      message:
+                        "File yang kamu pilih sudah di upload. Kamu bisa menggantinya kapan saja.",
+                    });
+                    setIsUploading(false);
+                    getDownloadURL(uploadTask.snapshot.ref).then(
+                      (downloadURL) => {
+                        setImageUrl(downloadURL);
+                      }
+                    );
+                  }
+                );
+              }}
+              onReject={(files) => {
+                if (files[0].errors[0].code === "file-too-large") {
+                  showNotification({
+                    title: "File Tidak Valid",
+                    message:
+                      "Ukuran file yang kamu pilih terlalu besar. Batas maksimal gambar adalah 5mb",
+                  });
+                }
+                if (files[0].errors[0].code === "file-invalid-type") {
+                  showNotification({
+                    title: "File tidak valid",
+                    message:
+                      "Tipe file yang kamu pilih bukan gambar. File yang diupload harus gambar",
+                  });
+                }
+              }}
+              maxSize={3 * 1024 ** 2}
+              accept={IMAGE_MIME_TYPE}
+            >
+              {(status) => dropzoneChildren(status, theme)}
+            </Dropzone>
+            <Stack sx={{ width: "100%" }}>
+              <TextInput
+                placeholder="Nama Spacemu"
+                label="Nama Space"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                description="Nama yang mudah di ingat akan lebih menarik"
+                required
+              />
+              <Checkbok label="Bagikan email saya secara publik di Space" />
+            </Stack>
+            <Button
+              loading={load}
+              fullWidth
+              onClick={() => buatServer(user.displayName)}
+            >
+              Buat Server
+            </Button>
           </Group>
-          <Divider my={3} />
-          <Stack></Stack>
         </Modal>
         <Navbar width={{ sm: 300 }} p="md" className={classes.navbar}>
           <Navbar.Section className={classes.section}>
