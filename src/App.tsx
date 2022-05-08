@@ -12,6 +12,7 @@ import List from "./pages/home/List";
 import Onboarding from "./pages/auth/Onboarding";
 import DirectMessages from "./pages/home/DirectMessages";
 import FriendList from "./pages/home/FriendList";
+import Join from "./pages/Join";
 
 const App: React.FC = () => {
   return (
@@ -25,7 +26,7 @@ const App: React.FC = () => {
       <Route path="/app/activity/@me" element={<AppActivity />} />
       <Route path="/app/messages/@me" element={<DirectMessages />} />
       <Route path="/app/friends/@me" element={<FriendList />} />
-      <Route path="/get-token" element={<GetToken />} />
+      <Route path="/join" element={<Join />} />
       {/* <Route path="/app" element={<Home />} /> */}
     </Routes>
   );

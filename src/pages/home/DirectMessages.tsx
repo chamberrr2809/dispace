@@ -1,73 +1,52 @@
 import React from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import auth from "../../firebase";
-import { doc, setDoc } from "firebase/firestore";
-import { storage, db } from "../../firebase";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { showNotification } from "@mantine/notifications";
-import { Upload, Photo, X, Icon as TablerIcon } from "tabler-icons-react";
-import { Dropzone, DropzoneStatus, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { EmailBanner } from "../../components/ConfirmationMail";
 import { useNavigate } from "react-router-dom";
-import randomstring from "randomstring";
-import moment from "moment";
+import image from "../../assets/logo.svg";
+import ServerHandler from "../../components/ServerHandler";
+import { useDisclosure } from "@mantine/hooks";
 import {
   createStyles,
   Navbar,
   TextInput,
   Code,
-  UnstyledButton,
-  MantineTheme,
+  Menu,
+  Avatar,
   useMantineTheme,
+  UnstyledButton,
   Badge,
   Modal,
   Button,
   Text,
-  Progress,
   Group,
-  Checkbox as Checkbok,
   ActionIcon,
   Tooltip,
   Image,
   Stack,
   Divider,
+  AppShell,
+  Title,
+  Box,
 } from "@mantine/core";
 import { useModals } from "@mantine/modals";
 import {
   Bulb,
   User,
-  Checkbox,
   Search,
   Plus,
-  Selector,
+  Logout,
+  Heart,
+  Star,
   Message,
+  Settings,
+  PlayerPause,
+  Trash,
+  SwitchHorizontal,
+  ChevronRight,
+  Selector,
 } from "tabler-icons-react";
 import { UserButton } from "../../components/UserButton";
-
-function getIconColor(status: DropzoneStatus, theme: MantineTheme) {
-  return status.accepted
-    ? theme.colors[theme.primaryColor][theme.colorScheme === "dark" ? 4 : 6]
-    : status.rejected
-    ? theme.colors.red[theme.colorScheme === "dark" ? 4 : 6]
-    : theme.colorScheme === "dark"
-    ? theme.colors.dark[0]
-    : theme.colors.gray[7];
-}
-
-function ImageUploadIcon({
-  status,
-  ...props
-}: React.ComponentProps<TablerIcon> & { status: DropzoneStatus }) {
-  if (status.accepted) {
-    return <Upload {...props} />;
-  }
-
-  if (status.rejected) {
-    return <X {...props} />;
-  }
-
-  return <Photo {...props} />;
-}
 
 const useStyles = createStyles((theme) => ({
   navbar: {
@@ -197,6 +176,15 @@ const useStyles = createStyles((theme) => ({
       color: theme.colorScheme === "dark" ? theme.white : theme.black,
     },
   },
+  imageMain: {
+    width: 100,
+    height: 100,
+    transition: "all 0.3s ease-in-out",
+
+    "&:hover": {
+      transform: "scale(1.3)",
+    },
+  },
 }));
 
 const links = [
@@ -210,8 +198,8 @@ const links = [
     icon: Message,
     label: "Pesan Langsung",
     notifications: 4,
-    focus: true,
     destination: "dm",
+    active: true,
   },
   { icon: User, label: "Teman", destination: "friend" },
 ];
@@ -231,53 +219,6 @@ const collections = [
 const DirectMessages: React.FC = () => {
   const [user, loading, error] = useAuthState(auth);
   const navigate = useNavigate();
-  const childFunc = React.useRef(null);
-  const [id, setId] = React.useState(
-    randomstring.generate({
-      length: 25,
-      charset: "numeric",
-    })
-  );
-  const theme = useMantineTheme();
-  const [name, setName] = React.useState("");
-  const [imageUrl, setImageUrl] = React.useState("");
-  const [opened, setOpened] = React.useState(false);
-  const [load, setLoad] = React.useState(false);
-  const [progress, setProgress] = React.useState(0);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isUploading, setIsUploading] = React.useState(false);
-  const dropzoneChildren = (status: DropzoneStatus, theme: MantineTheme) => (
-    <>
-      <Group
-        position="center"
-        spacing="xl"
-        style={{ minHeight: 220, pointerEvents: "none" }}
-      >
-        <ImageUploadIcon
-          status={status}
-          style={{ color: getIconColor(status, theme) }}
-          size={80}
-        />
-
-        <div>
-          <Text size="xl" inline>
-            {isLoading
-              ? "Mengupload Gambar... Mohon tunggu"
-              : "Tarik gambar ke sini atau tekan untuk memilih gambar"}
-          </Text>
-          <Text size="sm" color="dimmed" inline mt={7}>
-            File tidak dapat diubah setelah dipilih. Jenis file yang didukung
-            adalah JPEG, SVG, PNG, WEBP, dan GIF maksimal 5mb
-          </Text>
-        </div>
-      </Group>
-      <Progress
-        animate={isLoading ? false : true}
-        value={isUploading ? progress : 100}
-        striped={isLoading ? false : true}
-      />
-    </>
-  );
   const { classes } = useStyles();
 
   const redirectHandler = (link: string) => {
@@ -292,26 +233,11 @@ const DirectMessages: React.FC = () => {
     }
   };
 
-  const buatServer = async (username: string | null) => {
-    setLoad(true);
-    await setDoc(doc(db, "spaces", id), {
-      serverId: id,
-      creationId: randomstring.generate(35),
-      dateCreated: moment().format("dddd, MMMM Do YYYY"),
-      timeCreated: moment().format("h:mm:ss a"),
-      name: name,
-      imageURL: imageUrl,
-      createdBy: username,
-    }).then(() => {
-      navigate(`/app/server/${id}`);
-    });
-  };
-
   const mainLinks = links.map((link) => (
     <UnstyledButton
       onClick={() => redirectHandler(link.destination)}
       key={link.label}
-      className={link.focus ? classes.mainLinkFocus : classes.mainLink}
+      className={link.active ? classes.mainLinkFocus : classes.mainLink}
     >
       <div className={classes.mainLinkInner}>
         <link.icon size={20} className={classes.mainLinkIcon} />
@@ -347,176 +273,84 @@ const DirectMessages: React.FC = () => {
   if (user) {
     return (
       <>
-        <Modal
-          opened={opened}
-          onClose={() => setOpened(false)}
-          title="Buat/gabung Space"
-        >
-          <Group position="center">
-            <Image
-              src={!imageUrl ? "" : imageUrl}
-              placeholder={
-                <>
-                  <Stack spacing="xs">
-                    <Text align="center">Space Icon</Text>
-                    <Text align="center">128x128px</Text>
-                  </Stack>
-                </>
-              }
-              withPlaceholder
-              width={128}
-              height={128}
-            />
-            <Dropzone
-              mt="md"
-              onDrop={(files) => {
-                console.log("accepted files", files);
-                const metadata = {
-                  contentType: files[0].type,
-                };
-                const storageRef = ref(
-                  storage,
-                  "profile_picture/" + `${Date.now()}-${files[0].name}`
-                );
-                const uploadTask = uploadBytesResumable(
-                  storageRef,
-                  files[0],
-                  metadata
-                );
-                setIsUploading(true);
-                showNotification({
-                  title: `Mengupload ${files[0].name}`,
-                  message:
-                    "Foto Profilmu sedang diupload ke server Dispace. Mohon tunggu...",
-                  loading: isLoading,
-                  disallowClose: isLoading,
-                });
-                uploadTask.on(
-                  "state_changed",
-                  (snapshot) => {
-                    setIsLoading(true);
-                    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-                    const progress =
-                      (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    setProgress(progress);
-                  },
-                  (error) => {
-                    // A full list of error codes is available at
-                    // https://firebase.google.com/docs/storage/web/handle-errors
-                    switch (error.code) {
-                      case "storage/unauthorized":
-                        // User doesn't have permission to access the object
-                        break;
-                      case "storage/canceled":
-                        // User canceled the upload
-                        break;
+        <AppShell
+          navbar={
+            <Navbar width={{ sm: 300 }} p="md" className={classes.navbar}>
+              <Navbar.Section className={classes.section}>
+                <UserButton
+                  image={user.photoURL}
+                  name={user.displayName}
+                  email={user.email}
+                  icon={<Selector size={14} />}
+                />
+              </Navbar.Section>
 
-                      // ...
-
-                      case "storage/unknown":
-                        // Unknown error occurred, inspect error.serverResponse
-                        break;
-                    }
-                  },
-                  () => {
-                    setIsLoading(false);
-                    showNotification({
-                      title: "File Diupload",
-                      message:
-                        "File yang kamu pilih sudah di upload. Kamu bisa menggantinya kapan saja.",
-                    });
-                    setIsUploading(false);
-                    getDownloadURL(uploadTask.snapshot.ref).then(
-                      (downloadURL) => {
-                        setImageUrl(downloadURL);
-                      }
-                    );
-                  }
-                );
-              }}
-              onReject={(files) => {
-                if (files[0].errors[0].code === "file-too-large") {
-                  showNotification({
-                    title: "File Tidak Valid",
-                    message:
-                      "Ukuran file yang kamu pilih terlalu besar. Batas maksimal gambar adalah 5mb",
-                  });
-                }
-                if (files[0].errors[0].code === "file-invalid-type") {
-                  showNotification({
-                    title: "File tidak valid",
-                    message:
-                      "Tipe file yang kamu pilih bukan gambar. File yang diupload harus gambar",
-                  });
-                }
-              }}
-              maxSize={3 * 1024 ** 2}
-              accept={IMAGE_MIME_TYPE}
-            >
-              {(status) => dropzoneChildren(status, theme)}
-            </Dropzone>
-            <Stack sx={{ width: "100%" }}>
               <TextInput
-                placeholder="Nama Spacemu"
-                label="Nama Space"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                description="Nama yang mudah di ingat akan lebih menarik"
-                required
+                placeholder="Search"
+                size="xs"
+                icon={<Search size={12} />}
+                rightSectionWidth={70}
+                rightSection={
+                  <Code className={classes.searchCode}>Ctrl + K</Code>
+                }
+                styles={{ rightSection: { pointerEvents: "none" } }}
+                mb="sm"
               />
-              <Checkbok label="Bagikan email saya secara publik di Space" />
-            </Stack>
-            <Button
-              loading={load}
-              fullWidth
-              onClick={() => buatServer(user.displayName)}
+
+              <Navbar.Section className={classes.section}>
+                <div className={classes.mainLinks}>{mainLinks}</div>
+              </Navbar.Section>
+
+              <Navbar.Section className={classes.section}>
+                <Group className={classes.collectionsHeader} position="apart">
+                  <Text size="xs" weight={500} color="dimmed">
+                    Spaces
+                  </Text>
+                  <Tooltip label="Buat/Gabung Space" withArrow position="right">
+                    <ActionIcon
+                      onClick={() => navigate("/join")}
+                      variant="default"
+                      size={18}
+                    >
+                      <Plus size={12} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+                <div className={classes.collections}>{collectionLinks}</div>
+              </Navbar.Section>
+            </Navbar>
+          }
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "90vh",
+            }}
+          >
+            <Stack
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              spacing="xs"
             >
-              Buat Server
-            </Button>
-          </Group>
-        </Modal>
-        <Navbar width={{ sm: 300 }} p="md" className={classes.navbar}>
-          <Navbar.Section className={classes.section}>
-            <UserButton
-              image={user.photoURL}
-              name={user.displayName}
-              email={user.email}
-              icon={<Selector size={14} />}
-            />
-          </Navbar.Section>
-
-          <TextInput
-            placeholder="Search"
-            size="xs"
-            icon={<Search size={12} />}
-            rightSectionWidth={70}
-            rightSection={<Code className={classes.searchCode}>Ctrl + K</Code>}
-            styles={{ rightSection: { pointerEvents: "none" } }}
-            mb="sm"
-          />
-
-          <Navbar.Section className={classes.section}>
-            <div className={classes.mainLinks}>{mainLinks}</div>
-          </Navbar.Section>
-
-          <Navbar.Section className={classes.section}>
-            <Group className={classes.collectionsHeader} position="apart">
-              <Text size="xs" weight={500} color="dimmed">
-                Spaces
+              <img
+                className={classes.imageMain}
+                src={image}
+                alt="Dispace Logo"
+              />
+              <Title align="center" order={2}>
+                Selamat datang di Dispace, {user.displayName}
+              </Title>
+              <Text color="dimmed" align="center">
+                Pilih space atau kontak untuk memulai percakapan
               </Text>
-              <Tooltip label="Buat/Gabung Space" withArrow position="right">
-                <ActionIcon
-                  onClick={() => setOpened(true)}
-                  variant="default"
-                  size={18}
-                >
-                  <Plus size={12} />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-            <div className={classes.collections}>{collectionLinks}</div>
-          </Navbar.Section>
-        </Navbar>
+            </Stack>
+          </Box>
+        </AppShell>
       </>
     );
   }

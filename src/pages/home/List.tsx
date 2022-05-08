@@ -212,10 +212,7 @@ const collections = [
 const List: React.FC = () => {
   const [user, loading, error] = useAuthState(auth);
   const navigate = useNavigate();
-  const [opened, handlers] = useDisclosure(false);
-  const [openedd, setOpenedd] = React.useState(false);
   const { classes } = useStyles();
-  const theme = useMantineTheme();
 
   const redirectHandler = (link: string) => {
     if (link === "activity") {
@@ -304,7 +301,7 @@ const List: React.FC = () => {
                   </Text>
                   <Tooltip label="Buat/Gabung Space" withArrow position="right">
                     <ActionIcon
-                      onClick={() => setOpenedd(true)}
+                      onClick={() => navigate("/join")}
                       variant="default"
                       size={18}
                     >
@@ -317,30 +314,6 @@ const List: React.FC = () => {
             </Navbar>
           }
         >
-          <Modal
-            opened={openedd}
-            onClose={() => setOpenedd(false)}
-            title="Buat/gabung Space"
-          >
-            <Group position="center">
-              <Image
-                placeholder={
-                  <>
-                    <Stack spacing="xs">
-                      <Text align="center">Space Icon</Text>
-                      <Text align="center">128x128px</Text>
-                    </Stack>
-                  </>
-                }
-                withPlaceholder
-                width={128}
-                height={128}
-              />
-              <Button>Ubah Foto</Button>
-            </Group>
-            <Divider my={3} />
-            <Stack></Stack>
-          </Modal>
           <Box
             sx={{
               display: "flex",
