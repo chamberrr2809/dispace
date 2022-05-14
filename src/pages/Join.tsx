@@ -8,6 +8,7 @@ import {
   Button,
   Container,
   Group,
+  Modal,
   Anchor,
   Center,
   Box,
@@ -38,16 +39,6 @@ const useStyles = createStyles((theme) => ({
       textAlign: "center",
     },
   },
-  image: {
-    cursor: "pointer",
-    transition: "all 0.3s",
-    opacity: 1,
-    filter: "alpha(opacity=100)",
-    "&:hover": {
-      opacity: 0.3,
-      filter: "alpha(opacity=30)",
-    },
-  },
   input: {
     width: "100%",
   },
@@ -57,6 +48,7 @@ export default function Join() {
   const { classes } = useStyles();
   const [image, setImage] = React.useState("");
   const [type, setType] = React.useState(1);
+  const [opened, setOpened] = React.useState(false);
   const navigate = useNavigate();
   const [user, loading, error] = useAuthState(auth);
 
@@ -71,6 +63,13 @@ export default function Join() {
   if (user) {
     return (
       <Container size={460} my={30}>
+        <Modal
+          opened={opened}
+          onClose={() => setOpened(false)}
+          title="Upload Gambar"
+        >
+          {/* Modal content */}
+        </Modal>
         <Title className={classes.title} align="center">
           {type === 1 ? "Buat Space" : "Bergabung ke Space"}
         </Title>
@@ -83,15 +82,13 @@ export default function Join() {
         <Paper withBorder shadow="md" p={30} radius="md" mt="xl">
           <Stack align="center">
             <Image
-              radius={100}
+              src={image}
               width={120}
               height={120}
-              className={classes.image}
-              src={image}
-              alt=""
               withPlaceholder
-              placeholder={<Text align="center">Tekan untuk mengubah</Text>}
+              placeholder={<Text>Space Image</Text>}
             />
+            <Button onClick={() => setOpened(true)}>Pilih Gambar</Button>
             <TextInput
               placeholder="Nama space"
               className={classes.input}
